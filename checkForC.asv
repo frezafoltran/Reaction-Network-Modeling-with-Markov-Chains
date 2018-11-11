@@ -1,0 +1,46 @@
+function [ output_args ] = checkForC( range, n )
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
+
+
+  % Run code for direct comparisson
+  
+  range = 10;
+% Creates all possible n-tuples with values in range:{-range, -range + 1, ... 0, 1, ...range}
+possibleComb = combnk((1:range), n); 
+
+% Now takes all permutations within possibleComb to get:
+allPossibleComb = [];
+
+for i = 1: size(possibleComb,1)
+   
+    temp = perms(possibleComb(i,:));
+    
+    allPossibleComb = [allPossibleComb; temp];
+    
+end
+
+allPossibleComb = [allPossibleComb; possibleComb];
+   
+for i = 1: range
+   temp = ones(1,n); 
+   temp = temp * i;
+   allPossibleComb = [allPossibleComb; temp]; 
+   
+end
+
+for i = 1 : size(allPossibleComb, 1)
+    
+    allPossibleComb(i,:)
+    temp = allPossibleComb(i,:) * r;
+        
+        if all(temp <=0)
+           b = 1;
+           extra = allPossibleComb(i,:);
+           break
+        end
+    end
+
+
+end
+

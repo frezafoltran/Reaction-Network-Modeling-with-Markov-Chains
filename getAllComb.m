@@ -60,32 +60,28 @@ difComb = ones(nr,1);
 % initialize result
 result = 0;
 
-% initialize currCoef variable
-currCoef = 0;
-
 % Loops through each line of reactions (this actually calculates all
 % possible combinations of elements for each reaction)
 for i = 1:nr
 
    for j = 1: ne
       
-       
        currCoef = X(i,j);
-       
        if currCoef ~= 0 
-           
        % OBS: Handle error to avoid calculating possible combinations when 
        % there are not enough molecules of each element (should, for now, be
        % handled in findAbsState function)
        if init(1,j) >= currCoef
-           
-       result = nchoosek(init(1,j), currCoef);
+           result = nchoosek(init(1,j), currCoef);
        difComb(i,1) = difComb(i,1) * result;
        
        else 
            result = 0;
            difComb(i,1) = difComb(i,1) * result;
        end
+       
+       else
+           difComb(i,1) = difComb(i,1);
               
        end
    end  

@@ -1,4 +1,4 @@
-function [ stringReactions, absState ] = findAbsState( X, init, coef )
+function [ stringReactions, absState ] = findAbsState( X, init, coef, option )
 % This function finds the absorbing states of any set of reactions.
 
 % INPUTS:
@@ -17,6 +17,9 @@ function [ stringReactions, absState ] = findAbsState( X, init, coef )
 %   coef: Array that gives the proportionality constants for each reaction. 
 %      Must be in format k = (1, nr), for nr reactions. 
 
+%   option: if option = 1, include probabilisitc calculations, if option =
+%   0, randomize results.
+
 % OUTPUTS:
 %   stringReactions: Provides the number of molecules of each element after
 %   a specific number of reactions have occured:
@@ -30,6 +33,17 @@ nr = size(X, 1);
 % Define number of different elements present
 ne = length(init);
 
+% Extra for visualizing which reactions occured
+reacVec = zeros(1,nr);
+
+% ----------- CODE INTRODUCED TO NOT INClUDE PROBABILITY ------------------
+if option == 0
+
+vec = ones(1, nr) /nr;
+
+end
+% -------------------------------------------------------------------------
+
 % Create array to determine whether all constraints for specific reaction
 % are satisfied
 compare = ones(ne,1);
@@ -40,14 +54,14 @@ exit = 1;
 % Defines array of results to store partial values of StringReactions
 % and variable k to avoid incrementing result at wrong times
 k = 2;
-result = zeros(ne,1000);
+result = zeros(ne,5000);
 result(:, 1) = transpose(init);
 
 
 % Infinite loop that breaks when no reaction can be performed (abs state)
 while(1)
    
-   % Reinitializes variables to original values ( model each reaction as
+   % Reinitializes variables to original values (model each reaction as
    % independent of one another)
    reactionHappened = 0; 
    bol = zeros(ne,nr);
@@ -55,6 +69,8 @@ while(1)
    
    % Deals with calculating probaility of each reaction to happen
    
+% --------- CODE WAS PART OF ORIGINAL ROUTINE ----------------------------
+if option == 1
    % Stores all possible combinations of coefficients given their current
    % number of molecules for each reaction
    p = getAllComb(X, init);
@@ -66,7 +82,9 @@ while(1)
    Pt = transpose(P);
    % Creates array of cum sum of P to later model waiting times:
    cumSumP = cumsum(Pt);
-   
+end
+% ------------------------------------------------------------------------
+
    % Checks if any reaction can happen
    % Only can happen if bol() for the corresponding reaction
    % contains ones
@@ -87,23 +105,36 @@ while(1)
       end
    end
    
-  % display boolean matrix
-   
    % Generates random number between 1 and 0 
    random = rand();
    
+% --------------------- CODE WAS PART OF ORIGINAL ROUTINE -------------- 
+if option == 1
    % Models an outcome cs, such that it models the probability of 
    % each reaction to happen
    cs = find(cumSumP >= random, 1);
+end
+% ----------------------------------------------------------------------
    
+% ----------- CODE INTRODUCED TO NOT INClUDE PROBABILITY ------------------
+if option == 0
+cs = find (cumsum(vec) >= random, 1);
+end
+% -------------------------------------------------------------------------
+
    % Checks concurrently if the probability indicator function indicates
    % certain reaction and if that reaction can happen (based on number of 
    % remaining molecules of each reactant:
    for u = 1: nr
     
-   % ERROR This code had a problem for highr dimension matrices
+   % ERROR This code had a problem for higher dimension matrices
     if ((isequal(bol(:,u),compare) == 1) && (cs == u))
-       
+        
+        % Show which reactions occured for first 100 reactions
+        if exit > 4900
+        reacVec(1,u) = reacVec(1,u) + 1;
+        end
+        
        % Later account for all possible implementations
        for z = 1: ne
            
@@ -142,8 +173,8 @@ while(1)
    end
    
    % Checks if flag meets conditions
-   if exitOrNot == nr
-      break; 
+   if exitOrNot == 50  % I changed this line to make it harder to find abs state
+      break;           % if code bugs, try switching to exitOrNot == nr
    end
    
    % This is a temporary statement 
@@ -151,7 +182,7 @@ while(1)
    % state, assume there's no abs state and exit loop.
    exit = exit + 1;
    
-   if exit > 1000
+   if exit > 5000
        break;
    end
     
@@ -168,19 +199,18 @@ absState = 0;
 
 % if there was no reaction, abs state is initial state
 % check if there was no reaction
-bol = 0;
+absOrNot = 0;
 
-for o = 1: k-1
+for q = 1: k-1
   
-    if result(:,o) == result(:,1)
-       bol = bol + 1; 
+    if result(:,q) == result(:,1)
+       absOrNot = absOrNot + 1; 
     end
     
 end
 
-
 % if abs state was found, assign new value to absState variable
-if (exitOrNot == nr) || (bol == k-1)
+if (exitOrNot == nr) || (absOrNot == k-1)
     for l = k: k + 5
         stringReactions(:,l) = result(:,k-1);
         
